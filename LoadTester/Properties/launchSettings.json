@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "LoadTester": {
+      "commandName": "Project",
+      "commandLineArgs": "-m URL_GET_COMP -u http://localhost:5000/discovery/countries -c 5000"
+    }
+  }
+}
