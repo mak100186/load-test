@@ -22,21 +22,20 @@ public class TestService : ITestService
 
         int timeOut = 1000 * (count / 10);
 
+        RestClient restClient = null;
         try
         {
             if (tester != null && method != null)
             {
                 this._logger.LogInformation($"Test started at:{DateTime.Now}");
                 ITestResult testResult = await tester.Execute(url, count,
+                    client => { restClient = client; },
                     options =>
                     {
                         options.ThrowOnAnyError = true;
                         options.MaxTimeout = timeOut;
                     },
-                    request =>
-                    {
-                        request.Method = method.Value;
-                    },
+                    request => { request.Method = method.Value; },
                     response =>
                     {
                         if (!response.IsSuccessful)
@@ -55,7 +54,8 @@ public class TestService : ITestService
                 {
                     TotalCalls = testResult.TotalCalls,
                     ResultString = testResult.ResultString,
-                    Type = testResult.GetType().ToString()
+                    Type = testResult.GetType().ToString(),
+                    PerformedOn = DateTime.UtcNow
                 };
 
                 switch (testResult)
@@ -92,6 +92,10 @@ public class TestService : ITestService
         catch (Exception e)
         {
             this._logger.LogError($"Unsuccessful test run due to: {e.Message}");
+            restClient?.Dispose();
+        }
+        finally
+        {
             Environment.Exit(1);
         }
     }

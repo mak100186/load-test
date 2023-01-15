@@ -6,12 +6,12 @@ namespace LoadTester.Tester;
 
 public interface ITester
 {
-    Task<ITestResult> Execute(string url, int hitCount, Action<RestClientOptions>? optionsAction = null, Action<RestRequest>? requestAction = null, Action<RestResponse>? responseAction = null);
+    Task<ITestResult> Execute(string url, int hitCount, Action<RestClient>? clientAction = null, Action<RestClientOptions>? optionsAction = null, Action<RestRequest>? requestAction = null, Action<RestResponse>? responseAction = null);
 }
 
 public class TimeElapsedTester : ITester
 {
-    public async Task<ITestResult> Execute(string url, int hitCount, Action<RestClientOptions>? optionsAction = null, Action<RestRequest>? requestAction = null, Action<RestResponse>? responseAction = null)
+    public async Task<ITestResult> Execute(string url, int hitCount, Action<RestClient>? clientAction = null, Action<RestClientOptions>? optionsAction = null, Action<RestRequest>? requestAction = null, Action<RestResponse>? responseAction = null)
     {
         Stopwatch stopwatch = new();
         stopwatch.Start();
@@ -25,21 +25,29 @@ public class TimeElapsedTester : ITester
         RestClientOptions options = new(url);
         optionsAction?.Invoke(options);
 
-        RestClient client = new(options);
+        using RestClient client = new(options);
+        clientAction?.Invoke(client);
 
-        await Parallel.ForEachAsync(Enumerable.Range(1, hitCount), cancellationToken, async (counter, ct) =>
+        try
         {
-            ct.ThrowIfCancellationRequested();
+            await Parallel.ForEachAsync(Enumerable.Range(1, hitCount), cancellationToken, async (counter, ct) =>
+            {
+                ct.ThrowIfCancellationRequested();
 
-            RestRequest request = new();
-            requestAction?.Invoke(request);
+                RestRequest request = new();
+                requestAction?.Invoke(request);
 
-            RestResponse response = await client.ExecuteAsync(request, cancellationToken);
+                RestResponse response = await client.ExecuteAsync(request, cancellationToken);
 
-            responseAction?.Invoke(response);
+                responseAction?.Invoke(response);
 
-            ct.ThrowIfCancellationRequested();
-        });
+                ct.ThrowIfCancellationRequested();
+            });
+        }
+        finally
+        {
+            client.Dispose();
+        }
 
         stopwatch.Stop();
         timeTestResult.ElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
@@ -52,7 +60,7 @@ public class TimeElapsedTester : ITester
 
 public class MemoryProfilingTester : ITester
 {
-    public async Task<ITestResult> Execute(string url, int hitCount, Action<RestClientOptions>? optionsAction = null, Action<RestRequest>? requestAction = null, Action<RestResponse>? responseAction = null)
+    public async Task<ITestResult> Execute(string url, int hitCount, Action<RestClient>? clientAction = null, Action<RestClientOptions>? optionsAction = null, Action<RestRequest>? requestAction = null, Action<RestResponse>? responseAction = null)
     {
         long memoryBeforeCalls = GC.GetTotalMemory(false);
 
@@ -66,20 +74,28 @@ public class MemoryProfilingTester : ITester
         RestClientOptions options = new(url);
         optionsAction?.Invoke(options);
 
-        RestClient client = new(options);
+        using RestClient client = new(options);
+        clientAction?.Invoke(client);
 
-        await Parallel.ForEachAsync(Enumerable.Range(1, hitCount), cancellationToken, async (counter, ct) =>
+        try
         {
-            ct.ThrowIfCancellationRequested();
-            RestRequest request = new();
-            requestAction?.Invoke(request);
+            await Parallel.ForEachAsync(Enumerable.Range(1, hitCount), cancellationToken, async (counter, ct) =>
+            {
+                ct.ThrowIfCancellationRequested();
+                RestRequest request = new();
+                requestAction?.Invoke(request);
 
-            RestResponse response = await client.ExecuteAsync(request, cancellationToken);
+                RestResponse response = await client.ExecuteAsync(request, cancellationToken);
 
-            responseAction?.Invoke(response);
-            ct.ThrowIfCancellationRequested();
-        });
-        
+                responseAction?.Invoke(response);
+                ct.ThrowIfCancellationRequested();
+            });
+        }
+        finally
+        {
+            client.Dispose();
+        }
+
         long memoryUsedByCalls = GC.GetTotalMemory(false) - memoryBeforeCalls;
 
         memoryTestResult.MaxMemoryFootprint = memoryUsedByCalls;
@@ -92,7 +108,7 @@ public class MemoryProfilingTester : ITester
 
 public class ComprehensiveTester : ITester
 {
-    public async Task<ITestResult> Execute(string url, int hitCount, Action<RestClientOptions>? optionsAction = null, Action<RestRequest>? requestAction = null, Action<RestResponse>? responseAction = null)
+    public async Task<ITestResult> Execute(string url, int hitCount, Action<RestClient>? clientAction = null, Action<RestClientOptions>? optionsAction = null, Action<RestRequest>? requestAction = null, Action<RestResponse>? responseAction = null)
     {
         long memoryBeforeCalls = GC.GetTotalMemory(false);
         Stopwatch stopwatch = new();
@@ -109,22 +125,32 @@ public class ComprehensiveTester : ITester
         optionsAction?.Invoke(options);
 
         RestClient client = new(options);
+        
+        clientAction?.Invoke(client);
 
-        await Parallel.ForEachAsync(Enumerable.Range(1, hitCount), cancellationToken, async (counter, ct) =>
+        try
         {
-            ct.ThrowIfCancellationRequested();
-            RestRequest request = new();
-            requestAction?.Invoke(request);
+            await Parallel.ForEachAsync(Enumerable.Range(1, hitCount), cancellationToken, async (counter, ct) =>
+            {
+                ct.ThrowIfCancellationRequested();
+                RestRequest request = new();
+                requestAction?.Invoke(request);
 
-            RestResponse response = await client.ExecuteAsync(request, cancellationToken);
+                RestResponse response = await client.ExecuteAsync(request, cancellationToken);
 
-            responseAction?.Invoke(response);
-            ct.ThrowIfCancellationRequested();
-        });
+                responseAction?.Invoke(response);
+                ct.ThrowIfCancellationRequested();
+            });
+        }
+        finally
+        {
+            client.Dispose();
+        }
 
         long memoryUsedByCalls = GC.GetTotalMemory(false) - memoryBeforeCalls;
 
         stopwatch.Stop();
+        
         comprehensiveTestResult.ElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
         comprehensiveTestResult.AverageMillisecondsPerCall = comprehensiveTestResult.ElapsedMilliseconds / hitCount;
         comprehensiveTestResult.MaxMemoryFootprint = memoryUsedByCalls;

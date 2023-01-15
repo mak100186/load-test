@@ -9,4 +9,5 @@ public class TestResults
     public long ElapsedMilliseconds { get; set; }
     public long AverageMillisecondsPerCall { get; set; }
     public string ResultString { get; set; }
+    public DateTime PerformedOn { get; set; }
 }
