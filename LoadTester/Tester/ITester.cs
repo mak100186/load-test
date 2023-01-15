@@ -62,6 +62,7 @@ public class MemoryProfilingTester : ITester
 {
     public async Task<ITestResult> Execute(string url, int hitCount, Action<RestClient>? clientAction = null, Action<RestClientOptions>? optionsAction = null, Action<RestRequest>? requestAction = null, Action<RestResponse>? responseAction = null)
     {
+        GC.TryStartNoGCRegion(100000000); //100Mb
         long memoryBeforeCalls = GC.GetTotalMemory(false);
 
         MemoryTestResult memoryTestResult = new()
@@ -97,6 +98,7 @@ public class MemoryProfilingTester : ITester
         }
 
         long memoryUsedByCalls = GC.GetTotalMemory(false) - memoryBeforeCalls;
+        GC.EndNoGCRegion();
 
         memoryTestResult.MaxMemoryFootprint = memoryUsedByCalls;
         memoryTestResult.AverageMemoryFootprintPerCall = memoryTestResult.MaxMemoryFootprint / hitCount;
@@ -110,6 +112,7 @@ public class ComprehensiveTester : ITester
 {
     public async Task<ITestResult> Execute(string url, int hitCount, Action<RestClient>? clientAction = null, Action<RestClientOptions>? optionsAction = null, Action<RestRequest>? requestAction = null, Action<RestResponse>? responseAction = null)
     {
+        GC.TryStartNoGCRegion(100000000); //100Mb
         long memoryBeforeCalls = GC.GetTotalMemory(false);
         Stopwatch stopwatch = new();
         stopwatch.Start();
@@ -148,7 +151,7 @@ public class ComprehensiveTester : ITester
         }
 
         long memoryUsedByCalls = GC.GetTotalMemory(false) - memoryBeforeCalls;
-
+        GC.EndNoGCRegion();
         stopwatch.Stop();
         
         comprehensiveTestResult.ElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
