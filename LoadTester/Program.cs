@@ -29,7 +29,7 @@ IHost host = Host.CreateDefaultBuilder(args)
     {
         services
             .AddDbContextPool<TestResultContext>(contextBuilder =>
-                contextBuilder.BuildMarketMirrorContext(hostContext.Configuration))
+                contextBuilder.BuildContext(hostContext.Configuration))
             .AddEntityFrameworkNpgsql()
             .AddHostedService<HostedService>();
 

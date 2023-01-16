@@ -6,6 +6,12 @@ using Microsoft.Extensions.Logging;
 using RestSharp;
 
 namespace LoadTester.Tester;
+
+public interface ITestService
+{
+    Task Execute(string a, string b, int c);
+}
+
 public class TestService : ITestService
 {
     private readonly ILogger _logger;
@@ -99,9 +105,4 @@ public class TestService : ITestService
             Environment.Exit(1);
         }
     }
-}
-
-public interface ITestService
-{
-    Task Execute(string a, string b, int c);
 }

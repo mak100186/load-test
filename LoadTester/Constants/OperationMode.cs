@@ -14,3 +14,8 @@ public static class OperationMode
     public const string URL_GET_COMP = nameof(URL_GET_COMP);
     public const string URL_POST_COMP = nameof(URL_POST_COMP);
 }
+
+public static class ServiceConstants
+{
+    public const int MemoryThreshold = 100000000; //100Mb
+}

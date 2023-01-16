@@ -11,7 +11,7 @@ namespace LoadTester.Extensions;
 public static class Extensions
 {
     
-    public static DbContextOptionsBuilder BuildMarketMirrorContext(this DbContextOptionsBuilder options, IConfiguration configuration)
+    public static DbContextOptionsBuilder BuildContext(this DbContextOptionsBuilder options, IConfiguration configuration)
     {
         string connectionString = configuration.GetConnectionString("TestContext");
 
