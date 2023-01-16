@@ -3,4 +3,4 @@ Used to test memory and time constraints on the endpoint calls. Hihghly configur
 
 
 # Special Thanks
-A special thanks to Fabrizio Di Pietro for the time and guidance given. 
+A special thanks to Fabrizio Di Pietro (@sipronunciaaigor) for the time and guidance given. 
